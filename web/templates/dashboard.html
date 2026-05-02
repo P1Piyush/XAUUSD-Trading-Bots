@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloomberg Command Center</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --panel-bg: rgba(20, 20, 20, 0.85);
+            --border-color: #333;
+            --text-main: #e0e0e0;
+            --text-dim: #888;
+            --neon-green: #00ff88;
+            --neon-red: #ff3366;
+            --neon-blue: #00e5ff;
+            --neon-yellow: #ffea00;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--neon-blue);
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge.online { background: rgba(0, 255, 136, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
+        .status-badge.offline { background: rgba(255, 51, 102, 0.1); color: var(--neon-red); border: 1px solid var(--neon-red); }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel.macros { grid-column: span 4; }
+        .panel.strategies { grid-column: span 8; }
+        .panel.rl-guardian { grid-column: span 4; }
+        .panel.ea-connection { grid-column: span 8; }
+
+        h2 {
+            margin: 0;
+            font-size: 16px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            border-bottom: 1px solid #222;
+            padding-bottom: 10px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+        }
+        
+        .metric { font-size: 24px; font-weight: bold; font-family: monospace; }
+        .positive { color: var(--neon-green); }
+        .negative { color: var(--neon-red); }
+        .neutral { color: var(--neon-yellow); }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        button {
+            background: #2a2a2a;
+            color: white;
+            border: 1px solid #444;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            flex: 1;
+        }
+
+        button:hover { background: #444; }
+        button.panic { background: rgba(255,51,102,0.1); border-color: var(--neon-red); color: var(--neon-red); }
+        button.panic:hover { background: var(--neon-red); color: white; }
+
+        .strategy-log {
+            font-family: monospace;
+            font-size: 12px;
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            color: var(--neon-green);
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title">INSTITUTIONAL COMMAND CENTER <span style="color:var(--text-dim); font-size: 14px">v2.1</span></div>
+        <div class="status-badge" id="ea-status">CONNECTING...</div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- EA Connection & Account -->
+        <div class="panel ea-connection">
+            <h2>Live Engine Status</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div>
+                    <div style="color:var(--text-dim); font-size:12px;">ACCOUNT BALANCE</div>
+                    <div class="metric" id="metric-balance">$0.00</div>
+                </div>
+                <div>
+                    <div style="color:var(--text-dim); font-size:12px;">OPEN POSITIONS</div>
+                    <div class="metric" id="metric-positions">0</div>
+                </div>
+                <div>
+                    <div style="color:var(--text-dim); font-size:12px;">UNREALIZED PNL</div>
+                    <div class="metric positive" id="metric-pnl">+$0.00</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button onclick="sendCommand('LONG')">FORCE BUY</button>
+                <button onclick="sendCommand('SHORT')">FORCE SELL</button>
+                <button class="panic" onclick="sendCommand('CLOSE')">HARD PANIC CLOSE</button>
+            </div>
+        </div>
+
+        <!-- Macro Circuit Breaker -->
+        <div class="panel macros">
+            <h2>Circuit Breaker</h2>
+            <div class="data-row">
+                <span>Geopolitical Panic</span>
+                <span id="macro-status" style="font-weight:bold" class="positive">SAFE</span>
+            </div>
+            <div class="data-row">
+                <span>Spread Filter</span>
+                <span class="positive">OK (< 50pts)</span>
+            </div>
+            <div class="data-row">
+                <span>Connection Dead Man</span>
+                <span class="positive">OK (TCP LINKED)</span>
+            </div>
+        </div>
+
+        <!-- Strategy Feeds -->
+        <div class="panel strategies">
+            <h2>Strategy Signals</h2>
+            <div class="data-row">
+                <span style="min-width: 120px;">ICT Golden</span>
+                <div class="strategy-log" id="log-ict">Awaiting signal...</div>
+            </div>
+            <div class="data-row">
+                <span style="min-width: 120px;">Wyckoff </span>
+                <div class="strategy-log" id="log-wyk">Awaiting signal...</div>
+            </div>
+            <div class="data-row">
+                <span style="min-width: 120px;">Hidden Smash</span>
+                <div class="strategy-log" id="log-hsd">Awaiting signal...</div>
+            </div>
+        </div>
+
+        <!-- RL Guardian -->
+        <div class="panel rl-guardian">
+            <h2>Deep RL Guardian</h2>
+            <div style="text-align: center; margin: 20px 0;">
+                <div style="color:var(--text-dim); font-size:12px; margin-bottom:5px;">CURRENT ACTION STATE</div>
+                <div class="metric neutral" id="rl-action" style="font-size: 32px;">[ 0: HOLD ]</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const res = await fetch('/status');
+                const data = await res.json();
+
+                // Connections
+                const eaBadge = document.getElementById('ea-status');
+                if (data.ea_connected) {
+                    eaBadge.className = 'status-badge online';
+                    eaBadge.innerHTML = '● EA CONNECTED (PORT 9999)';
+                } else {
+                    eaBadge.className = 'status-badge offline';
+                    eaBadge.innerHTML = '○ EA DISCONNECTED';
+                }
+
+                // Balance Matrix
+                if(data.ea.balance) {
+                    document.getElementById('metric-balance').innerText = '$' + parseFloat(data.ea.balance).toFixed(2);
+                    document.getElementById('metric-positions').innerText = data.ea.positions || '0';
+                    document.getElementById('metric-pnl').innerText = '$' + parseFloat(data.ea.profit_cash || 0).toFixed(2);
+                    if(parseFloat(data.ea.profit_cash) < 0) {
+                        document.getElementById('metric-pnl').className = 'metric negative';
+                    } else {
+                        document.getElementById('metric-pnl').className = 'metric positive';
+                    }
+                }
+
+                // Scraper Alert
+                if(data.macro_panic) {
+                    document.getElementById('macro-status').innerText = 'CRISIS DETECTED - LOCKED';
+                    document.getElementById('macro-status').className = 'negative';
+                } else {
+                    document.getElementById('macro-status').innerText = 'SAFE / ARMED';
+                    document.getElementById('macro-status').className = 'positive';
+                }
+
+                // RL Agent
+                const actions = {0: "HOLD / SCAN", 1: "TRAIL BREAK-EVEN", 2: "PARTIAL EXITS", 3: "PANIC LIQUIDATE"};
+                const action = data.rl_active_action || 0;
+                document.getElementById('rl-action').innerText = `[ ${action}: ${actions[action]} ]`;
+
+                // Log Tickers
+                if(data.ict_last) document.getElementById('log-ict').innerText = data.ict_last;
+                if(data.wyckoff_last) document.getElementById('log-wyk').innerText = data.wyckoff_last;
+                if(data.hsd_last) document.getElementById('log-hsd').innerText = data.hsd_last;
+
+            } catch (err) {
+                console.error('Poller Error:', err);
+                document.getElementById('ea-status').className = 'status-badge offline';
+                document.getElementById('ea-status').innerHTML = '○ FLASK DISCONNECTED';
+            }
+        }
+
+        async function sendCommand(sig) {
+            try {
+                await fetch('/webhook', {
+                    method: 'POST',
+                    body: JSON.stringify({ secret: 'piyush_xau_bot_2026', signal: sig })
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        setInterval(updateDashboard, 1000);
+        updateDashboard();
+    </script>
+</body>
+</html>

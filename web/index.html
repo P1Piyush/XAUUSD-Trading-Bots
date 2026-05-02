@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAUUSD Institutional Command Center</title>
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --panel: #141417;
+            --text: #ffffff;
+            --subtext: #888891;
+            --accent: #2e66ff;
+            --profit: #00ff88;
+            --loss: #ff2a42;
+            --warn: #ffae00;
+            --border: #2a2a30;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .live-pulse {
+            width: 10px;
+            height: 10px;
+            background-color: var(--profit);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--profit);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .col-4 { grid-column: span 4; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+
+        .panel-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--subtext);
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .metric-big {
+            font-size: 32px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .profit-text { color: var(--profit); }
+        .loss-text { color: var(--loss); }
+
+        .kv-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        .kv-row:last-child { border-bottom: none; }
+        .kv-key { color: var(--subtext); }
+        .kv-val { font-family: monospace; font-size: 15px; }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .bg-profit { background: rgba(0, 255, 136, 0.1); color: var(--profit); border: 1px solid rgba(0, 255, 136, 0.3); }
+        .bg-loss { background: rgba(255, 42, 66, 0.1); color: var(--loss); border: 1px solid rgba(255, 42, 66, 0.3); }
+        .bg-warn { background: rgba(255, 174, 0, 0.1); color: var(--warn); border: 1px solid rgba(255, 174, 0, 0.3); }
+        
+        .macro-alert {
+            display: none;
+            background: rgba(255, 42, 66, 0.15);
+            border: 1px solid var(--loss);
+            color: var(--loss);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            animation: pulse 1s infinite alternate;
+        }
+
+        .btn-panic {
+            background-color: var(--loss);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(255, 42, 66, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-panic:hover {
+            background-color: red;
+            transform: scale(1.02);
+        }
+        .btn-test {
+            border: none;
+            padding: 15px;
+            width: 48%;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-test.long { background-color: var(--profit); color: #000; }
+        .btn-test.short { background-color: var(--loss); color: #fff; }
+        .btn-test:hover { opacity: 0.8; transform: scale(1.02); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title"><div class="live-pulse"></div> XAUUSD COMMAND CENTER</div>
+        <div id="timestamp" style="color: var(--subtext); font-family: monospace;"></div>
+    </div>
+
+    <div id="macroAlert" class="macro-alert">
+        🚨 CIRCUIT BREAKER TRIPPED: MACRO PANIC DETECTED (TRADING LOCKED)
+    </div>
+
+    <div class="grid">
+        <!-- Account Overview -->
+        <div class="panel col-4">
+            <div class="panel-title">PORTFOLIO BALANCE</div>
+            <div id="balance" class="metric-big" style="margin-bottom: 5px;">$0.00</div>
+            <div class="kv-row">
+                <span class="kv-key">Equity</span>
+                <span class="kv-val" id="equity">$0.00</span>
+            </div>
+            <div class="kv-row">
+                <span class="kv-key">MT5 Connection</span>
+                <span class="kv-val" id="eaStatus"><span class="status-badge bg-loss">DISCONNECTED</span></span>
+            </div>
+        </div>
+
+        <!-- Active Trade -->
+        <div class="panel col-4">
+            <div class="panel-title">ACTIVE POSITIONS</div>
+            <div id="activePips" class="metric-big" style="margin-bottom: 5px;">0.0 Pips</div>
+            <div class="kv-row">
+                <span class="kv-key">Unrealized PnL</span>
+                <span class="kv-val" id="activeCash">$0.00</span>
+            </div>
+            <div class="kv-row">
+                <span class="kv-key">RL Guardian Action</span>
+                <span class="kv-val" id="rlAction"><span style="color:var(--subtext)">WAITING</span></span>
+            </div>
+        </div>
+
+        <!-- Commands -->
+        <div class="panel col-4" style="display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+                <button class="btn-test long" onclick="sendSignal('LONG')">FORCE LONG</button>
+                <button class="btn-test short" onclick="sendSignal('SHORT')">FORCE SHORT</button>
+            </div>
+            <button class="btn-panic" onclick="sendSignal('CLOSE')">HARD PANIC CLOSE</button>
+        </div>
+
+        <!-- Signal Engine Matrix -->
+        <div class="panel col-12">
+            <div class="panel-title">ALGORITHMIC ENGINES</div>
+            <div class="grid">
+                <div class="panel col-4" style="border: none; background: rgba(0,0,0,0.2);">
+                    <div class="panel-title">ICT GOLDEN SMC (15m)</div>
+                    <div id="ictLog" style="font-family: monospace; font-size: 13px; color: var(--subtext); min-height: 40px;">Awaiting signal...</div>
+                </div>
+                <div class="panel col-4" style="border: none; background: rgba(0,0,0,0.2);">
+                    <div class="panel-title">HIDDEN SMASH DAY (D1)</div>
+                    <div id="hsdLog" style="font-family: monospace; font-size: 13px; color: var(--subtext); min-height: 40px;">Awaiting signal...</div>
+                </div>
+                <div class="panel col-4" style="border: none; background: rgba(0,0,0,0.2);">
+                    <div class="panel-title">WYCKOFF SPRING (15m)</div>
+                    <div id="wykLog" style="font-family: monospace; font-size: 13px; color: var(--subtext); min-height: 40px;">Awaiting signal...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setInterval(() => {
+            document.getElementById('timestamp').innerText = new Date().toUTCString();
+        }, 1000);
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/status');
+                const data = await res.json();
+                
+                // Connection
+                if(data.ea_connected) {
+                    document.getElementById('eaStatus').innerHTML = '<span class="status-badge bg-profit">ONLINE (TCP)</span>';
+                } else {
+                    document.getElementById('eaStatus').innerHTML = '<span class="status-badge bg-loss">DISCONNECTED</span>';
+                }
+
+                // Macro
+                if(data.macro_panic) {
+                    document.getElementById('macroAlert').style.display = 'block';
+                } else {
+                    document.getElementById('macroAlert').style.display = 'none';
+                }
+
+                if(data.ea && data.ea.balance) {
+                    document.getElementById('balance').innerText = "$" + parseFloat(data.ea.balance).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    document.getElementById('equity').innerText = "$" + parseFloat(data.ea.equity).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    
+                    let pips = parseFloat(data.ea.profit_pips || 0);
+                    let cash = parseFloat(data.ea.profit_cash || 0);
+                    
+                    let activePipsEl = document.getElementById('activePips');
+                    let activeCashEl = document.getElementById('activeCash');
+                    
+                    if (parseFloat(data.ea.positions) > 0) {
+                        activePipsEl.innerText = pips.toFixed(1) + " Pips";
+                        activeCashEl.innerText = (cash >= 0 ? "+" : "") + "$" + cash.toFixed(2);
+                        
+                        activePipsEl.className = 'metric-big ' + (pips >= 0 ? 'profit-text' : 'loss-text');
+                        activeCashEl.className = 'kv-val ' + (cash >= 0 ? 'profit-text' : 'loss-text');
+                    } else {
+                        activePipsEl.innerText = "0.0 Pips";
+                        activeCashEl.innerText = "$0.00";
+                        activePipsEl.className = 'metric-big';
+                        activeCashEl.className = 'kv-val';
+                    }
+                }
+
+                // RL Agent
+                let rlAct = data.rl_active_action;
+                let rlText = '<span style="color:var(--subtext)">HOLD</span>';
+                if(rlAct === 1) rlText = '<span class="bg-warn status-badge">TRAIL BREAK-EVEN</span>';
+                if(rlAct === 2) rlText = '<span class="bg-profit status-badge">PARTIAL CLOSE</span>';
+                if(rlAct === 3) rlText = '<span class="bg-loss status-badge">PANIC EXIT</span>';
+                document.getElementById('rlAction').innerHTML = rlText;
+
+                // Logs
+                if(data.ict_last && typeof data.ict_last === 'object') {
+                    document.getElementById('ictLog').innerText = `[${data.ict_last.time}] ${data.ict_last.signal} | ${data.ict_last.reason}`;
+                }
+                if(data.hsd_last && typeof data.hsd_last === 'object') {
+                    document.getElementById('hsdLog').innerText = `[${data.hsd_last.time}] ${data.hsd_last.signal} | ${data.hsd_last.reason}`;
+                }
+                if(data.wyckoff_last && typeof data.wyckoff_last === 'object') {
+                    document.getElementById('wykLog').innerText = `[${data.wyckoff_last.time}] ${data.wyckoff_last.signal} | ${data.wyckoff_last.reason}`;
+                }
+
+            } catch (err) {
+                console.error("Dashboard out of sync", err);
+            }
+        }
+
+        async function sendSignal(sig) {
+            try {
+                await fetch('/webhook', {
+                    method: 'POST',
+                    body: JSON.stringify({ secret: "piyush_xau_bot_2026", signal: sig, sl: 4.0 })
+                });
+                alert(sig + " SIGNAL DISPATCHED TO MT5!");
+            } catch (err) { }
+        }
+
+        setInterval(fetchStatus, 1000);
+        fetchStatus();
+    </script>
+</body>
+</html>

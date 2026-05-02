@@ -1,0 +1,297 @@
+XAUUSD Bot Results Summary
+============================
+
+3step_pa_backtest.csv
+  Rows: 1
+  Net PnL: -61.50
+  Win rate: 0.0%
+  Profit factor: 0.00
+  Expectancy/trade: -61.50
+  Avg win: n/a
+  Avg loss: -61.50
+  Top outcomes:
+    SL: 1
+  Direction split:
+    SHORT: 1
+  Best hours:
+    18:00  trades=1 wr=0% pnl=-61.50
+  Worst hours:
+    18:00  trades=1 wr=0% pnl=-61.50
+  Day split:
+    Thursday: trades=1 pnl=-61.50
+
+
+backtest_full_results.csv
+  Rows: 4
+  Net PnL: +210.80
+  Win rate: 50.0%
+  Profit factor: inf
+  Expectancy/trade: +52.70
+  Avg win: +105.40
+  Avg loss: +0.00
+  Top outcomes:
+    TP2: 2
+    SL: 2
+  Direction split:
+    SHORT: 4
+  Best hours:
+    19:00  trades=2 wr=100% pnl=+210.80
+    17:00  trades=1 wr=0% pnl=+0.00
+    18:00  trades=1 wr=0% pnl=+0.00
+  Worst hours:
+    17:00  trades=1 wr=0% pnl=+0.00
+    18:00  trades=1 wr=0% pnl=+0.00
+    19:00  trades=2 wr=100% pnl=+210.80
+  Day split:
+    Tuesday: trades=4 pnl=+210.80
+
+
+backtest_results.csv
+  Rows: 1061
+  Net PnL: -5959.68
+  Win rate: 41.8%
+  Profit factor: 0.83
+  Expectancy/trade: -5.62
+  Avg win: +65.07
+  Avg loss: -56.29
+  Top outcomes:
+    SL: 802
+    TP2: 255
+    TIMEOUT: 4
+  Direction split:
+    SHORT: 678
+    LONG: 383
+  Best hours:
+    12:00  trades=51 wr=59% pnl=+600.06
+    23:00  trades=44 wr=50% pnl=+567.33
+    19:00  trades=41 wr=39% pnl=+256.55
+  Worst hours:
+    16:00  trades=43 wr=33% pnl=-1422.16
+    01:00  trades=50 wr=32% pnl=-1389.42
+    08:00  trades=56 wr=25% pnl=-1230.79
+  Day split:
+    Wednesday: trades=221 pnl=+433.95
+    Sunday: trades=12 pnl=+287.14
+    Tuesday: trades=201 pnl=-103.86
+    Friday: trades=218 pnl=-2140.01
+    Monday: trades=163 pnl=-2145.09
+    Thursday: trades=246 pnl=-2291.81
+
+
+m1_backtest_results.csv
+  Rows: 17
+  Net PnL: +86.75
+  Win rate: 35.3%
+  Profit factor: 1.33
+  Expectancy/trade: +5.10
+  Avg win: +58.21
+  Avg loss: -23.86
+  Top outcomes:
+    SL: 13
+    TIMEOUT: 4
+  Direction split:
+    SHORT: 11
+    LONG: 6
+  Best hours:
+    14:00  trades=1 wr=100% pnl=+112.25
+    07:00  trades=3 wr=67% pnl=+49.25
+    08:00  trades=6 wr=33% pnl=+40.50
+  Worst hours:
+    16:00  trades=3 wr=0% pnl=-99.50
+    12:00  trades=1 wr=0% pnl=-24.50
+    09:00  trades=3 wr=33% pnl=+8.75
+  Day split:
+    Thursday: trades=4 pnl=+127.50
+    Monday: trades=3 pnl=+81.50
+    Tuesday: trades=3 pnl=+9.75
+    Wednesday: trades=2 pnl=-37.00
+    Friday: trades=5 pnl=-95.00
+
+
+orb_backtest_results.csv
+  Rows: 44
+  Net PnL: -673.65
+  Win rate: 9.1%
+  Profit factor: 0.48
+  Expectancy/trade: -15.31
+  Avg win: +157.50
+  Avg loss: -32.59
+  Top outcomes:
+    SL: 41
+    TP2: 2
+    TIMEOUT: 1
+  Direction split:
+    LONG: 28
+    SHORT: 16
+  Best hours:
+    15:00  trades=3 wr=33% pnl=+41.93
+    14:00  trades=11 wr=9% pnl=-16.05
+    13:00  trades=30 wr=7% pnl=-699.53
+  Worst hours:
+    13:00  trades=30 wr=7% pnl=-699.53
+    14:00  trades=11 wr=9% pnl=-16.05
+    15:00  trades=3 wr=33% pnl=+41.93
+  Day split:
+    Monday: trades=7 pnl=+147.60
+    Thursday: trades=8 pnl=-79.87
+    Tuesday: trades=10 pnl=-112.43
+    Friday: trades=8 pnl=-241.80
+    Wednesday: trades=11 pnl=-387.15
+
+
+pa_scalp_backtest.csv
+  Rows: 78
+  Net PnL: -99.50
+  Win rate: 29.5%
+  Profit factor: 0.92
+  Expectancy/trade: -1.28
+  Avg win: +48.74
+  Avg loss: -22.19
+  Top outcomes:
+    SL: 55
+    TP: 23
+  Direction split:
+    LONG: 53
+    SHORT: 25
+  Best hours:
+    14:00  trades=10 wr=50% pnl=+175.00
+    17:00  trades=9 wr=44% pnl=+96.00
+    18:00  trades=7 wr=57% pnl=+93.00
+  Worst hours:
+    09:00  trades=7 wr=14% pnl=-144.50
+    07:00  trades=5 wr=0% pnl=-88.50
+    12:00  trades=14 wr=21% pnl=-77.50
+  Day split:
+    Wednesday: trades=18 pnl=+211.00
+    Friday: trades=13 pnl=+17.00
+    Tuesday: trades=17 pnl=-84.00
+    Monday: trades=13 pnl=-110.00
+    Thursday: trades=17 pnl=-133.50
+
+
+pdh_backtest_results.csv
+  Rows: 47
+  Net PnL: +62.70
+  Win rate: 48.9%
+  Profit factor: 1.04
+  Expectancy/trade: +1.33
+  Avg win: +68.52
+  Avg loss: -63.05
+  Top outcomes:
+    SL: 34
+    TP2: 13
+  Direction split:
+    LONG: 28
+    SHORT: 19
+  Best hours:
+    16:00  trades=1 wr=100% pnl=+186.39
+    08:00  trades=2 wr=50% pnl=+151.09
+    03:00  trades=1 wr=100% pnl=+125.12
+  Worst hours:
+    01:00  trades=4 wr=25% pnl=-194.98
+    09:00  trades=1 wr=0% pnl=-101.43
+    10:00  trades=2 wr=0% pnl=-94.87
+  Day split:
+    Friday: trades=8 pnl=+127.02
+    Monday: trades=12 pnl=+103.26
+    Tuesday: trades=9 pnl=-2.50
+    Thursday: trades=10 pnl=-8.42
+    Wednesday: trades=8 pnl=-156.66
+
+
+scalp_backtest_results.csv
+  Rows: 384
+  Net PnL: -45.16
+  Win rate: 32.3%
+  Profit factor: 0.82
+  Expectancy/trade: -0.12
+  Avg win: +1.70
+  Avg loss: -0.98
+  Top outcomes:
+    LOSS: 260
+    WIN: 124
+  Direction split:
+    SHORT: 232
+    LONG: 152
+  Best hours:
+    17:00  trades=45 wr=42% pnl=+7.67
+    15:00  trades=29 wr=45% pnl=+7.33
+    11:00  trades=36 wr=39% pnl=+0.77
+  Worst hours:
+    13:00  trades=53 wr=25% pnl=-17.44
+    14:00  trades=50 wr=26% pnl=-17.19
+    16:00  trades=41 wr=27% pnl=-8.52
+  Day split:
+    Wednesday: trades=75 pnl=-1.58
+    Thursday: trades=81 pnl=-2.36
+    Monday: trades=80 pnl=-5.46
+    Tuesday: trades=70 pnl=-15.34
+    Friday: trades=78 pnl=-20.42
+
+
+scalp_combined_results.csv
+  Rows: 142
+  Net PnL: -208.81
+  Win rate: 38.0%
+  Profit factor: 0.97
+  Expectancy/trade: -1.47
+  Avg win: +128.89
+  Avg loss: -81.46
+  Top outcomes:
+    LOSS: 88
+    WIN: 54
+  Direction split:
+    SHORT: 72
+    LONG: 70
+  Best hours:
+    17:00  trades=24 wr=42% pnl=+221.32
+    14:00  trades=4 wr=50% pnl=+177.39
+    08:00  trades=3 wr=67% pnl=+113.63
+  Worst hours:
+    10:00  trades=4 wr=0% pnl=-255.00
+    11:00  trades=36 wr=36% pnl=-195.88
+    15:00  trades=24 wr=38% pnl=-181.10
+  Day split:
+    Wednesday: trades=31 pnl=+1070.09
+    Monday: trades=32 pnl=-125.12
+    Tuesday: trades=24 pnl=-275.67
+    Thursday: trades=31 pnl=-288.12
+    Friday: trades=24 pnl=-589.99
+
+
+scalp_trade_log.csv
+  Rows: 7
+  Top outcomes:
+    WIN: 2
+    LOSS: 1
+  Direction split:
+    55834421769.0: 1
+    55836461615.0: 1
+    55836615764.0: 1
+    55841657237.0: 1
+
+
+trade_log.csv
+  Rows: 19
+  Net PnL: +0.00
+  Win rate: 0.0%
+  Profit factor: inf
+  Expectancy/trade: +0.00
+  Avg win: n/a
+  Avg loss: +0.00
+  Top outcomes:
+    WIN: 4
+    LOSS: 3
+  Direction split:
+    SHORT: 3
+  Best hours:
+    06:00  trades=12 wr=0% pnl=+0.00
+    14:00  trades=5 wr=0% pnl=+0.00
+    19:00  trades=2 wr=0% pnl=+0.00
+  Worst hours:
+    06:00  trades=12 wr=0% pnl=+0.00
+    14:00  trades=5 wr=0% pnl=+0.00
+    19:00  trades=2 wr=0% pnl=+0.00
+  Day split:
+    Friday: trades=15 pnl=+0.00
+    Monday: trades=4 pnl=+0.00
