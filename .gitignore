@@ -6,3 +6,4 @@ __pycache__/
 .gitnexus/
 *.joblib
 *.pkl
+*.db

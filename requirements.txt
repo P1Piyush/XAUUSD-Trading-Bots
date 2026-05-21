@@ -1,0 +1,6 @@
+MetaTrader5>=5.0.45
+numpy>=1.24.0
+pandas>=2.0.0
+aiosqlite>=0.19.0
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
