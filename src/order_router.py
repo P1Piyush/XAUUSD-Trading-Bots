@@ -94,6 +94,26 @@ class OrderRouter:
         self._order = order_config or OrderConfig()
         self._symbol = symbol_config or SymbolConfig()
         self._session = session_config or SessionConfig()
+        self._partially_closed_tickets: set = set()
+
+    async def load_partially_closed_tickets(self) -> None:
+        """Populate the in-memory set of partially closed tickets from the database.
+
+        Should be called on startup so that the management loop does not
+        re-attempt partial closes for tickets already processed.
+        """
+        try:
+            active_trades = await self._db.get_active_trades()
+            self._partially_closed_tickets = {
+                t["ticket"] for t in active_trades if t.get("partial_closed", 0) == 1
+            }
+            logger.info(
+                "Loaded %d partially closed tickets from database",
+                len(self._partially_closed_tickets),
+            )
+        except Exception as exc:
+            logger.error("Failed to load partially closed tickets: %s", exc)
+            self._partially_closed_tickets = set()
 
     # ------------------------------------------------------------------
     # Order Execution
@@ -463,8 +483,9 @@ class OrderRouter:
                 position.volume - close_volume,
             )
 
-            # Update trade in database
+            # Update trade in database and in-memory tracking set
             await self._db.update_trade(ticket, {"partial_closed": 1})
+            self._partially_closed_tickets.add(ticket)
 
             return True
 
@@ -491,6 +512,9 @@ class OrderRouter:
 
         For BUY positions: new SL = entry_price + commission_buffer
         For SELL positions: new SL = entry_price - commission_buffer
+
+        Uses _send_with_retry() for resilient execution against transient
+        MT5 failures (requotes, timeouts).
 
         Args:
             ticket: MT5 position ticket to modify.
@@ -530,27 +554,23 @@ class OrderRouter:
                 "tp": position.tp,
             }
 
-            result = mt5.order_send(request)
+            await self._send_with_retry(request)
 
-            if result is not None and result.retcode == 10009:
-                logger.info(
-                    "Modified to breakeven: ticket=%d, new_sl=%.5f "
-                    "(entry=%.5f, buffer=%.5f)",
-                    ticket,
-                    new_sl,
-                    entry_price,
-                    commission_buffer,
-                )
-                return True
-            else:
-                retcode = result.retcode if result else "None"
-                logger.error(
-                    "Breakeven modification failed: ticket=%d, retcode=%s",
-                    ticket,
-                    retcode,
-                )
-                return False
+            logger.info(
+                "Modified to breakeven: ticket=%d, new_sl=%.5f "
+                "(entry=%.5f, buffer=%.5f)",
+                ticket,
+                new_sl,
+                entry_price,
+                commission_buffer,
+            )
+            return True
 
+        except OrderExecutionError as exc:
+            logger.error(
+                "Breakeven modification failed for ticket=%d: %s", ticket, exc
+            )
+            return False
         except Exception as exc:
             logger.error(
                 "Error modifying to breakeven for ticket=%d: %s", ticket, exc
@@ -814,7 +834,8 @@ class OrderRouter:
     def _is_partially_closed(self, ticket: int) -> bool:
         """Check if a position has already been partially closed.
 
-        Queries the database for partial_closed status.
+        Uses the in-memory set populated on startup from the database
+        and updated after each successful partial close.
 
         Args:
             ticket: Position ticket to check.
@@ -822,10 +843,7 @@ class OrderRouter:
         Returns:
             True if position was already partially closed.
         """
-        # This is a synchronous check - use cached active trades
-        # In production, the caller should maintain a set of partially closed tickets
-        # For now, we rely on database state being checked async elsewhere
-        return False
+        return ticket in self._partially_closed_tickets
 
 
 # ---------------------------------------------------------------------------

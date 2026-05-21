@@ -65,6 +65,10 @@ class RiskConfig:
     equity_poll_interval_ms: int = 500
     kelly_fraction: float = 0.25
     kelly_cap_pct: float = 0.5
+    kelly_cold_start_fraction: float = 0.5
+    """Fraction of max_risk_per_trade_pct to use when trade history has fewer
+    than 10 samples and Kelly cannot produce a meaningful estimate.
+    Default 0.5 means half of max risk (i.e. 0.25% with default prop config)."""
 
 
 @dataclass(frozen=True)

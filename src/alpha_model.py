@@ -298,6 +298,16 @@ class AlphaModel:
         win/loss ratio. Applies fractional Kelly with a cap at
         max_risk_per_trade_pct.
 
+        Cold-start behavior:
+            When trade history contains fewer than 10 samples, the Kelly
+            formula cannot produce a statistically meaningful estimate and
+            returns 0.0. In this case, the position sizer falls back to
+            ``max_risk_per_trade_pct * kelly_cold_start_fraction`` (default
+            0.5, yielding 0.25% risk per trade with default config). This
+            conservative default prevents oversized positions during early
+            live operation while still allowing trades. The fallback fraction
+            is configurable via ``RiskConfig.kelly_cold_start_fraction``.
+
         Args:
             account_balance: Current account balance.
             sl_distance: Stop loss distance in price units.
@@ -320,9 +330,11 @@ class AlphaModel:
         max_risk = self._prop.max_risk_per_trade_pct / 100.0
         position_risk = min(position_risk, max_risk)
 
-        # Ensure minimum risk allocation
+        # Cold-start fallback: when Kelly returns 0 (insufficient history),
+        # use a configurable fraction of max risk to allow trading at reduced size.
         if position_risk <= 0:
-            position_risk = max_risk * 0.5  # Use half of max as fallback
+            cold_start_fraction = self._risk.kelly_cold_start_fraction
+            position_risk = max_risk * cold_start_fraction
 
         # Convert risk percentage to dollar risk
         dollar_risk = account_balance * position_risk
@@ -361,8 +373,12 @@ class AlphaModel:
 
         Kelly % = (win_rate * avg_win - (1 - win_rate) * avg_loss) / avg_win
 
+        When fewer than 10 trades are available, returns 0.0 to signal
+        that the Kelly estimate is unreliable. The caller should apply
+        the cold-start fallback (see calculate_kelly_lot_size).
+
         Returns:
-            Kelly percentage (0.0 if insufficient history).
+            Kelly percentage (0.0 if insufficient history or losing strategy).
         """
         # This is called synchronously - use a cached/preloaded history
         # In production, history would be pre-fetched async before calling

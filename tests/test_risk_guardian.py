@@ -1,6 +1,6 @@
 """Tests for src/risk_guardian.py - risk limit enforcement."""
 
-from datetime import date
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -24,7 +24,7 @@ async def guardian(database):
 class TestDailyLossLock:
     async def test_daily_loss_locks_at_4_percent(self, guardian, database):
         """start_balance=10000, equity=9600 -> is_locked=True (exactly 4%)."""
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
 
         # Set up daily metrics with start_balance=10000
         metrics = {
@@ -45,7 +45,7 @@ class TestDailyLossLock:
 
     async def test_daily_loss_does_not_lock_below_4_percent(self, guardian, database):
         """equity=9601 -> is_locked=False (3.99% loss)."""
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
 
         metrics = {
             "date": today,
@@ -65,7 +65,7 @@ class TestDailyLossLock:
 
     async def test_reset_daily_lock(self, guardian, database):
         """After lock, reset clears it."""
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
 
         metrics = {
             "date": today,

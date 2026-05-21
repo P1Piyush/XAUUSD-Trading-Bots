@@ -144,6 +144,9 @@ class CoreEngine:
         await self._alpha_model.load_trade_history()
         logger.info("Trade history loaded for Kelly calculations")
 
+        # Load partially closed tickets into order router memory
+        await self._order_router.load_partially_closed_tickets()
+
         # Launch signal and management loops
         signal_task = asyncio.create_task(
             self._signal_loop(), name="signal_loop"

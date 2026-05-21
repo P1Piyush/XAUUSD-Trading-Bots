@@ -9,7 +9,7 @@ close-all if thresholds are breached.
 
 import asyncio
 import logging
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from typing import Optional
 
 try:
@@ -156,7 +156,7 @@ class RiskGuardian:
             equity: Current account equity.
             balance: Current account balance.
         """
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
 
         # Detect new day (broker rollover)
         if self._current_day != today:
@@ -272,6 +272,8 @@ class RiskGuardian:
 
         Iterates all open positions from MT5, sends market close orders
         for each ticket, cancels all pending orders, and sets is_locked.
+        All MT5 calls are wrapped in asyncio.to_thread() to avoid blocking
+        the event loop during the critical close-all operation.
         """
         logger.critical("EMERGENCY CLOSE ALL triggered")
 
@@ -284,7 +286,7 @@ class RiskGuardian:
 
         # Close all open positions
         try:
-            positions = mt5.positions_get()
+            positions = await asyncio.to_thread(mt5.positions_get)
             if positions is not None and len(positions) > 0:
                 logger.info(
                     "Closing %d open positions", len(positions)
@@ -308,7 +310,7 @@ class RiskGuardian:
                             "type_time": mt5.ORDER_TIME_GTC,
                             "type_filling": mt5.ORDER_FILLING_IOC,
                         }
-                        result = mt5.order_send(request)
+                        result = await asyncio.to_thread(mt5.order_send, request)
                         if result is not None and result.retcode == 10009:
                             logger.info(
                                 "Emergency closed position ticket=%d, volume=%.2f",
@@ -344,13 +346,15 @@ class RiskGuardian:
         """Cancel all pending orders from MT5.
 
         Fetches all pending orders and removes each one.
+        All MT5 calls are wrapped in asyncio.to_thread() to avoid blocking
+        the event loop.
         """
         if not MT5_AVAILABLE or mt5 is None:
             logger.warning("MT5 not available - cannot cancel pending orders")
             return
 
         try:
-            orders = mt5.orders_get()
+            orders = await asyncio.to_thread(mt5.orders_get)
             if orders is not None and len(orders) > 0:
                 logger.info("Cancelling %d pending orders", len(orders))
                 for order in orders:
@@ -359,7 +363,7 @@ class RiskGuardian:
                             "action": mt5.TRADE_ACTION_REMOVE,
                             "order": order.ticket,
                         }
-                        result = mt5.order_send(request)
+                        result = await asyncio.to_thread(mt5.order_send, request)
                         if result is not None and result.retcode == 10009:
                             logger.info(
                                 "Cancelled pending order ticket=%d",
@@ -406,7 +410,7 @@ class RiskGuardian:
             Float representing the percentage drawdown from day-start balance.
             Returns 0.0 if data is unavailable.
         """
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
         daily_metrics = await self._db.get_daily_metrics(today)
 
         if daily_metrics is None:

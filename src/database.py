@@ -7,7 +7,7 @@ and recovery across VM restarts.
 """
 
 import logging
-from datetime import date, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +28,7 @@ class TradingDatabase:
     def __init__(self, config: Optional[DatabaseConfig] = None) -> None:
         self._config = config or DatabaseConfig()
         self._db: Optional[aiosqlite.Connection] = None
+        self._snapshot_insert_count: int = 0
 
     async def initialize(self) -> None:
         """Initialize the database connection and create schema."""
@@ -178,6 +179,9 @@ class TradingDatabase:
     ) -> None:
         """Save an equity snapshot record.
 
+        After every 1000 snapshots inserted, triggers retention cleanup
+        to delete rows older than 7 days.
+
         Args:
             timestamp: ISO format timestamp string.
             balance: Account balance.
@@ -196,6 +200,39 @@ class TradingDatabase:
         await self._db.commit()
         logger.debug("Saved equity snapshot at %s", timestamp)
 
+        # Periodic retention: every 1000 snapshots, prune rows older than 7 days
+        self._snapshot_insert_count += 1
+        if self._snapshot_insert_count >= 1000:
+            self._snapshot_insert_count = 0
+            await self._prune_old_snapshots()
+
+    async def _prune_old_snapshots(self, retention_days: int = 7) -> None:
+        """Delete equity snapshot rows older than the retention period.
+
+        Args:
+            retention_days: Number of days to retain. Default is 7.
+        """
+        assert self._db is not None, "Database not initialized"
+
+        from datetime import datetime, timedelta, timezone
+
+        cutoff = (
+            datetime.now(timezone.utc) - timedelta(days=retention_days)
+        ).isoformat()
+
+        result = await self._db.execute(
+            "DELETE FROM equity_snapshots WHERE timestamp < ?",
+            (cutoff,),
+        )
+        await self._db.commit()
+        deleted = result.rowcount if result else 0
+        if deleted > 0:
+            logger.info(
+                "Pruned %d equity snapshots older than %d days",
+                deleted,
+                retention_days,
+            )
+
     async def get_daily_metrics(self, target_date: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Retrieve daily metrics for a given date.
 
@@ -208,7 +245,7 @@ class TradingDatabase:
         assert self._db is not None, "Database not initialized"
 
         if target_date is None:
-            target_date = date.today().isoformat()
+            target_date = datetime.now(timezone.utc).date().isoformat()
 
         cursor = await self._db.execute(
             "SELECT * FROM daily_metrics WHERE date = ?",
