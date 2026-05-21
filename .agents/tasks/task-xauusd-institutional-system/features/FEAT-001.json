@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-001",
+  "type": "docs",
+  "description": "Create the EARS notation requirements specification document and system architecture map at docs/SPEC_EARS_REQUIREMENTS.md. This document defines all user stories, the system architecture diagram (in text/mermaid), and the discrete execution task sequence for the four institutional pillars.",
+  "status": "in_progress",
+  "steps": [
+    "Create docs/SPEC_EARS_REQUIREMENTS.md with the following sections:",
+    "1. EARS Notation User Stories covering all four pillars: (a) Smart Money Confluence Alpha Model - MTF structure analysis, OB/FVG detection, session liquidity sweeps, M1 MSS execution trigger (b) Max-Profit Dynamic Lot Calculation - Kelly Criterion sizing, partial close at 1:1.5 RR, break-even modification, ride to 1:4/1:5 target (c) Air-Gapped Risk Guardian - 500ms equity polling, 4% daily max loss fail-safe at broker rollover, 9% total drawdown lockout (d) VM Persistence & Fault Tolerance - SQLite state tracking, reconnection on reboot, exponential backoff retry, requote handling",
+    "2. System Architecture Map - Mermaid diagram showing: main.py bootstraps core_engine.py which orchestrates alpha_model.py, market_intelligence.py, risk_guardian.py, order_router.py; database.py provides persistence to all modules; config.py provides constants to all modules",
+    "3. Data Flow Diagram - How market data flows from MT5 API through market_intelligence (candle fetching, structure analysis) to alpha_model (signal generation) to order_router (execution) with risk_guardian as an independent background monitor",
+    "4. Discrete Execution Task Sequence - Numbered steps showing the exact order of operations from startup through signal generation to trade management to shutdown",
+    "5. Module Interface Contracts - Key class/method signatures for each module showing how they interact"
+  ],
+  "acceptance_criteria": [
+    "docs/SPEC_EARS_REQUIREMENTS.md exists and is well-formatted markdown",
+    "All four institutional pillars are covered with EARS notation user stories",
+    "Architecture diagram is present in Mermaid syntax",
+    "Execution task sequence is complete and references specific module/class names",
+    "Module interface contracts match what will be implemented in subsequent features"
+  ],
+  "verification": [
+    "cat docs/SPEC_EARS_REQUIREMENTS.md to verify content exists and is properly formatted",
+    "Verify the document contains EARS notation patterns (When/Where/While/If-Then)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
