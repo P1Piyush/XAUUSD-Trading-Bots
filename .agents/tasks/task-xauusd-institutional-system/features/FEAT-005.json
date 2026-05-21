@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Implement src/core_engine.py and src/main.py - the main async event loop orchestrator that ties all modules together, plus the entry point script that bootstraps the entire system with proper startup/shutdown lifecycle including database state recovery.",
+  "status": "in_progress",
+  "steps": [
+    "Create src/core_engine.py with class CoreEngine containing: (a) Constructor initializes all module instances: MarketIntelligence, AlphaModel, RiskGuardian, OrderRouter, TradingDatabase (b) async method start() - the main orchestration method: initializes database, recovers state from SQLite (reconnects to any active MT5 tickets found in DB), starts RiskGuardian monitoring task, enters the main signal loop (c) async method _recover_state() - on startup, reads active trades from database, verifies each ticket still exists in MT5 (via positions_get), updates any that were closed while offline, reconciles lot sizes if partial closes happened externally (d) async method _signal_loop() - main trading loop: checks if risk_guardian.is_locked, if not calls alpha_model.generate_signal(), if signal returned calls order_router.execute_trade(), sleeps for configurable interval between scans (e) async method _trade_management_loop() - separate asyncio task: monitors all open positions via order_router._manage_open_positions(), handles partial closes and trailing/target logic (f) async method stop() - graceful shutdown: cancels all asyncio tasks, saves final state to database, logs shutdown (g) Property status -> dict returning current engine state for external monitoring",
+    "Create src/main.py as the entry point: (a) Parses command-line arguments (--dry-run for testing without MT5, --config-override for custom config path) (b) Sets up logging with rotating file handler + console output, format includes timestamp/level/module/message (c) Initializes MT5 connection (mt5.initialize()) with error handling (d) Creates CoreEngine instance (e) Registers signal handlers (SIGINT, SIGTERM) for graceful shutdown (f) Runs asyncio.run(engine.start()) (g) On shutdown: calls engine.stop(), mt5.shutdown(), logs final status (h) In --dry-run mode: skips MT5 initialization, uses mock data for testing module integration",
+    "Ensure the system handles VM reboot recovery: on startup, main.py initializes DB, CoreEngine._recover_state() parses all active tickets from SQLite and reconciles with MT5 server state, ensuring zero orphaned positions"
+  ],
+  "acceptance_criteria": [
+    "src/core_engine.py exists with CoreEngine class orchestrating all modules",
+    "src/main.py exists as a runnable entry point with argument parsing",
+    "State recovery from SQLite on startup is implemented in _recover_state()",
+    "Signal loop respects RiskGuardian lock state",
+    "Trade management loop runs as a separate asyncio task from signal generation",
+    "Graceful shutdown saves state and cleans up resources",
+    "--dry-run flag allows testing without MT5 connection",
+    "python -m py_compile src/core_engine.py succeeds",
+    "python -m py_compile src/main.py succeeds",
+    "python src/main.py --dry-run executes without error (may log warnings about no MT5 but should not crash)"
+  ],
+  "verification": [
+    "Run: python -m py_compile src/core_engine.py && echo 'OK'",
+    "Run: python -m py_compile src/main.py && echo 'OK'",
+    "Run: python -c 'from src.core_engine import CoreEngine; print(\"Import OK\")'",
+    "Run: cd /projects/sandbox/XAUUSD-Trading-Bots && timeout 5 python src/main.py --dry-run || true",
+    "Verify the system creates data/trading_state.db on first run"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
