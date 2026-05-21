@@ -2,7 +2,7 @@
   "id": "FEAT-006",
   "type": "feat",
   "description": "Create comprehensive unit tests in tests/ directory that validate all module logic with mocked MT5 calls, covering market structure detection, signal generation, risk guardian behavior, order routing retry logic, and database operations.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create tests/__init__.py",
     "Create tests/conftest.py with shared fixtures: mock MT5 module (since MT5 package requires Windows), sample candle data arrays (numpy arrays mimicking MT5 copy_rates format), sample account info, mock database instance",
@@ -29,5 +29,5 @@
     "All tests should pass without any MT5 or network dependency"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 50 tests pass. Python 3.9 is installed (not 3.11+). FrozenInstanceError exists but object.__setattr__ bypasses frozen check - use normal setattr instead. Market structure detection requires carefully crafted swing points with explicit peaks/troughs exceeding the lookback window to be detected. pytest-asyncio mode=strict requires explicit async markers."
 }
