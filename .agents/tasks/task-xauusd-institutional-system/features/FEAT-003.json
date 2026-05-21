@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Implement src/market_intelligence.py and src/alpha_model.py - the Smart Money Confluence analysis and signal generation engine covering MTF structure analysis, Order Block/FVG detection, session liquidity sweeps, and M1 Market Structure Shift execution triggers.",
+  "status": "completed",
+  "steps": [
+    "Create src/market_intelligence.py with class MarketIntelligence containing: (a) async method fetch_candles(symbol, timeframe, count) - wraps MT5 copy_rates_from_pos with error handling (b) method detect_market_structure(candles) - identifies Higher Highs/Higher Lows (bullish) and Lower Highs/Lower Lows (bearish) using swing point detection on H1/H4 data, returns MarketStructure enum (BULLISH, BEARISH, RANGING) (c) method detect_order_blocks(candles, structure) - finds institutional order blocks: last opposing candle before a strong displacement move, validates with volume (volume > 1.5x average), returns list of OrderBlock dataclass (price_high, price_low, timeframe, direction, volume_ratio, valid) (d) method detect_fair_value_gaps(candles) - identifies FVGs where candle[i-1].low > candle[i+1].high (bearish) or candle[i-1].high < candle[i+1].low (bullish), filters by min_gap >= ATR * fvg_min_gap_atr_ratio from config, returns list of FVG dataclass (e) method get_asian_session_range(candles_m15) - calculates exact high/low of Asian session (00:00-08:00 UTC) from M15 candles for the current day (f) method detect_liquidity_sweep(candles_m5_m15, asian_high, asian_low, atr) - checks if latest candle wicked outside Asian range by dynamic ATR multiplier threshold, then body closed back inside the range (g) method detect_displacement(candles_m1) - identifies expansive candles with high relative volume (volume > 2x recent average) and spread > 1.5x ATR (h) Helper: calculate_atr(candles, period) - ATR calculation utility",
+    "Create src/alpha_model.py with class AlphaModel containing: (a) Constructor takes MarketIntelligence and TradingDatabase instances (b) async method generate_signal() - orchestrates the full confluence check: Step 1: Get H1/H4 candles, determine MTF institutional bias Step 2: Detect active Order Blocks and FVGs on HTF Step 3: Get M15/M5 candles, calculate Asian session range Step 4: Check for liquidity sweep at Asian high/low within an HTF OB or FVG zone Step 5: If sweep detected, drill into M1 candles Step 6: Look for Market Structure Shift (MSS) with displacement on M1 Step 7: If MSS confirmed, return TradeSignal dataclass with direction, entry_price, sl_price, tp_prices, confidence, confluence_factors (c) method calculate_kelly_lot_size(account_balance) - implements Fractional Kelly Criterion: pulls win_rate and avg_win/avg_loss from database trade history, calculates kelly_pct = (win_rate * avg_win - (1-win_rate) * avg_loss) / avg_win, applies kelly_fraction from config, caps at max_risk_per_trade_pct (d) dataclass TradeSignal with fields: direction (BUY/SELL), entry_price, stop_loss, take_profit_1 (1.5 RR), take_profit_2 (4-5 RR), lot_size, confidence_score, confluence_factors (list of strings describing what aligned), timestamp (e) All methods use proper logging with module-level logger",
+    "Ensure all type hints are present, use dataclasses for data structures (OrderBlock, FVG, MarketStructure, TradeSignal, SwingPoint), and include comprehensive docstrings"
+  ],
+  "acceptance_criteria": [
+    "src/market_intelligence.py exists with MarketIntelligence class and all methods described",
+    "src/alpha_model.py exists with AlphaModel class and generate_signal() method",
+    "All dataclasses (OrderBlock, FVG, TradeSignal, SwingPoint) are defined with proper type hints",
+    "Kelly Criterion calculation is implemented correctly with database history lookup",
+    "Liquidity sweep detection checks both wick outside range AND body rejection back inside",
+    "MSS detection requires both structure break AND displacement (volume + spread)",
+    "python -m py_compile src/market_intelligence.py succeeds",
+    "python -m py_compile src/alpha_model.py succeeds"
+  ],
+  "verification": [
+    "Run: python -m py_compile src/market_intelligence.py && echo 'OK'",
+    "Run: python -m py_compile src/alpha_model.py && echo 'OK'",
+    "Run: python -c 'from src.market_intelligence import MarketIntelligence; from src.alpha_model import AlphaModel, TradeSignal; print(\"Imports OK\")'",
+    "Run: python -c 'import inspect; from src.alpha_model import AlphaModel; print(inspect.signature(AlphaModel.generate_signal))'"
+  ],
+  "blocked_reason": null,
+  "findings": "Python 3 available as python3 (not python). MetaTrader5 import wrapped with try/except for Linux compatibility. numpy, pandas, aiosqlite installed. All methods verified with synthetic data: structure detection correctly identifies BULLISH/BEARISH/RANGING patterns, ATR calculation works, Asian session range detected from M15 candles, liquidity sweep detection validated, Kelly lot sizing tested with mock history. The _compute_kelly_percentage method uses a _trade_history_cache list that should be populated via async load_trade_history() before generate_signal() is called."
+}

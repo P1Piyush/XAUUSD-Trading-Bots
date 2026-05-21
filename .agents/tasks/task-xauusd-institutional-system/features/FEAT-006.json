@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-006",
+  "type": "feat",
+  "description": "Create comprehensive unit tests in tests/ directory that validate all module logic with mocked MT5 calls, covering market structure detection, signal generation, risk guardian behavior, order routing retry logic, and database operations.",
+  "status": "completed",
+  "steps": [
+    "Create tests/__init__.py",
+    "Create tests/conftest.py with shared fixtures: mock MT5 module (since MT5 package requires Windows), sample candle data arrays (numpy arrays mimicking MT5 copy_rates format), sample account info, mock database instance",
+    "Create tests/test_config.py - verify all config dataclasses have correct default values, types are correct, prop firm parameters match spec (4% daily, 9% total, 0.5% per trade)",
+    "Create tests/test_database.py - test TradingDatabase: initialize creates all tables, save_trade/get_active_trades round-trips correctly, equity snapshots are stored and retrievable, daily metrics track correctly, system_state key-value works",
+    "Create tests/test_market_intelligence.py - test MarketIntelligence: detect_market_structure correctly identifies bullish (HH/HL) and bearish (LH/LL) patterns from sample data, detect_order_blocks finds valid OBs with volume confirmation, detect_fair_value_gaps identifies gaps meeting ATR threshold, get_asian_session_range correctly filters 00:00-08:00 UTC candles, detect_liquidity_sweep identifies wick-outside + body-inside pattern, detect_displacement identifies high-volume expansive candles",
+    "Create tests/test_alpha_model.py - test AlphaModel: generate_signal returns None when no confluence, returns TradeSignal when all conditions align (mock the cascade: structure + OB/FVG + sweep + MSS), calculate_kelly_lot_size caps at 0.5% max risk, Kelly formula produces correct values for known win_rate/payoff inputs",
+    "Create tests/test_risk_guardian.py - test RiskGuardian: daily loss detection triggers lock at exactly 4%, total drawdown triggers at exactly 9%, is_locked prevents order dispatch, reset_daily_lock resets correctly, boundary conditions (3.99% does NOT lock, 4.0% DOES lock)",
+    "Create tests/test_order_router.py - test OrderRouter: execute_trade respects risk lock, _send_with_retry implements correct backoff delays, partial close calculates 50% volume correctly, breakeven modification includes buffer, deviation adjustment activates during overlap hours only"
+  ],
+  "acceptance_criteria": [
+    "tests/ directory exists with all test files",
+    "All tests pass: python -m pytest tests/ -v",
+    "Tests use unittest.mock to mock MT5 module calls",
+    "Risk guardian tests verify exact threshold boundaries (4.0% and 9.0%)",
+    "Kelly criterion test verifies mathematical correctness with known inputs",
+    "At least 3 test cases per module covering normal, edge, and error conditions",
+    "No test requires actual MT5 connection or Windows environment"
+  ],
+  "verification": [
+    "Run: pip install pytest pytest-asyncio",
+    "Run: python -m pytest tests/ -v --tb=short",
+    "Run: python -m pytest tests/ --co (collect only - verify test discovery works)",
+    "All tests should pass without any MT5 or network dependency"
+  ],
+  "blocked_reason": null,
+  "findings": "All 50 tests pass. Python 3.9 is installed (not 3.11+). FrozenInstanceError exists but object.__setattr__ bypasses frozen check - use normal setattr instead. Market structure detection requires carefully crafted swing points with explicit peaks/troughs exceeding the lookback window to be detected. pytest-asyncio mode=strict requires explicit async markers."
+}
